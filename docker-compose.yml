@@ -8,11 +8,11 @@ services:
      - MYSQL_DATABASE=achat
      - MYSQL_ALLOW_EMPTY_PASSWORD=true
    ports:
-      - "3306:3306"
+      - "3307:3307"
    volumes:
       - db:/var/lib/mysql
  app:
-   container_name: spring1
+   container_name: spring
    image: eyabenabdallah/devoops
    depends_on:
      - mysqldb
