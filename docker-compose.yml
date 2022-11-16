@@ -12,7 +12,7 @@ services:
    volumes:
       - db:/var/lib/mysql
  app:
-   container_name: spring
+   container_name: spring1
    image: eyabenabdallah/devoops
    depends_on:
      - mysqldb
