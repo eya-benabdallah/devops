@@ -1,1 +1,105 @@
+pipeline {
+    agent any
+    environment {
+        DOCKERHUB_CREDENTIALS=credentials('eya-achat')
+        registry = "eya-benabdallah/devops"
+        registryCredential = 'eya-achat'
+        dockerImage = ' '
+    }
+     stages{
+     stage('Checkout GIT'){
+          steps {
+              echo 'Pulling ...';
+              git branch: 'main',
+              url : 'https://github.com/eya-benabdallah/devops.git'
+      }    
+    }
 
+        stage('MVN CLEAN'){
+             steps {
+                 sh 'mvn clean'
+         }
+         }
+
+        stage('MVN COMPILE'){
+             steps {
+                 sh 'mvn compile'
+             }
+         }  
+        
+
+    //     stage('SonarQube analysis 1') {
+    //         steps {
+    //             sh 'mvn sonar:sonar -Dsonar.login=admin -Dsonar.password=sonar'
+    //      }
+    //   }
+     stage('MVN Nexus'){
+            steps {
+                sh 'mvn deploy'
+            } 
+            }
+
+    stage ('JUnit / Mockito Test'){
+            steps{
+                script
+                 {
+                    if (isUnix())
+                    {
+                        sh 'mvn --batch-mode test'
+                    }
+                    else
+                    {
+                        bat 'mvn --batch-mode test'
+                    }
+                 }
+            }
+        }
+    
+        
+       
+            stage('Build image') {
+          steps {
+            sh 'docker build -t eyabenabdallah/devoops:latest .'
+      		}
+      		}
+      	
+      		
+      		 stage ('DOCKER LOGIN') {
+            steps {
+                sh ' docker login -u eyabenabdallah -p eyaaaCisco98  ';
+            }
+        } 
+      stage ('DOCKER PUSH') {
+             steps {
+                 sh 'docker push eyabenabdallah/devoops:latest';
+             }
+         }
+        stage('Building image docker-compose') {
+          steps {
+
+              sh 'docker-compose up -d '
+          }
+        }
+        stage('Cleaning up') {
+ 		  steps {
+ 	         withDockerRegistry([ credentialsId: "eya-achat", url: "" ]) {
+ 			
+        	 sh "docker rmi -f eyabenabdallah/devoops:latest"
+        	}
+        	}
+        	}   
+    
+       
+        stage("Email"){
+            steps{
+               emailext attachLog: true, body: "the result is :  ${currentBuild.result}", compressLog: true, subject: "Status of pipeline: ${currentBuild.fullDisplayName}", to: 'eya.benabdallah@esprit.tn'
+           }
+        } 
+       
+       		
+            
+            
+    }
+}
+     
+     
